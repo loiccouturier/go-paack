@@ -23,13 +23,16 @@ type Client interface {
 }
 
 type client struct {
-	authenticateHost string
-	labelHost        string
-	host             string
-	clientId         string
-	clientSecret     string
-	token            string
-	tokenForLabel    string
+	authenticateHost         string
+	authenticateHostForLabel string
+	labelHost                string
+	host                     string
+	clientId                 string
+	clientSecret             string
+	token                    string
+	audience                 string
+	tokenForLabel            string
+	audienceForLabel         string
 }
 
 func (c *client) CreateOrder(order Order) (*OrderResponse, *ApiError) {
@@ -101,7 +104,7 @@ func (c *client) CreateLabel(label Label) ([]byte, *ApiError) {
 func (c *client) authenticate() *ApiError {
 	var result AuthenticateResponse
 
-	apiError := c.call(http.MethodPost, fmt.Sprintf("%s/oauth/token", c.authenticateHost), &Authenticate{ClientId: c.clientId, ClientSecret: c.clientSecret, Audience: "https://ggl-stg-gcp-gw", GrantType: "client_credentials"}, &result, false, false)
+	apiError := c.call(http.MethodPost, fmt.Sprintf("%s/oauth/token", c.authenticateHost), &Authenticate{ClientId: c.clientId, ClientSecret: c.clientSecret, Audience: c.audience, GrantType: "client_credentials"}, &result, false, false)
 	if apiError != nil {
 		return apiError
 	}
@@ -114,7 +117,7 @@ func (c *client) authenticate() *ApiError {
 func (c *client) authenticateForLabel() *ApiError {
 	var result AuthenticateResponse
 
-	apiError := c.call(http.MethodPost, fmt.Sprintf("%s/oauth/token", c.authenticateHost), &Authenticate{ClientId: c.clientId, ClientSecret: c.clientSecret, Audience: "https://api.oms.staging.paack.app", GrantType: "client_credentials"}, &result, false, false)
+	apiError := c.call(http.MethodPost, fmt.Sprintf("%s/oauth/token", c.authenticateHostForLabel), &Authenticate{ClientId: c.clientId, ClientSecret: c.clientSecret, Audience: c.audienceForLabel, GrantType: "client_credentials"}, &result, false, false)
 	if apiError != nil {
 		return apiError
 	}
@@ -227,12 +230,15 @@ func (c *client) call(method, url string, body, result interface{}, needAuthenti
 	return nil
 }
 
-func NewClient(host, authenticateHost, labelHost, clientId, clientSecret string) Client {
+func NewClient(host, authenticateHost, authenticateHostForLabel, labelHost, audience, audienceForLabel, clientId, clientSecret string) Client {
 	return &client{
-		host:             host,
-		authenticateHost: authenticateHost,
-		labelHost:        labelHost,
-		clientId:         clientId,
-		clientSecret:     clientSecret,
+		host:                     host,
+		authenticateHost:         authenticateHost,
+		authenticateHostForLabel: authenticateHostForLabel,
+		labelHost:                labelHost,
+		clientId:                 clientId,
+		clientSecret:             clientSecret,
+		audience:                 audience,
+		audienceForLabel:         audienceForLabel,
 	}
 }

@@ -23,16 +23,18 @@ type Client interface {
 }
 
 type client struct {
-	authenticateHost         string
-	authenticateHostForLabel string
-	labelHost                string
 	host                     string
+	authenticateHost         string
+	token                    string
 	clientId                 string
 	clientSecret             string
-	token                    string
 	audience                 string
+	authenticateHostForLabel string
 	tokenForLabel            string
+	clientIdForLabel         string
+	clientSecretForLabel     string
 	audienceForLabel         string
+	labelHost                string
 }
 
 func (c *client) CreateOrder(order Order) (*OrderResponse, *ApiError) {
@@ -117,7 +119,7 @@ func (c *client) authenticate() *ApiError {
 func (c *client) authenticateForLabel() *ApiError {
 	var result AuthenticateResponse
 
-	apiError := c.call(http.MethodPost, fmt.Sprintf("%s/oauth/token", c.authenticateHostForLabel), &Authenticate{ClientId: c.clientId, ClientSecret: c.clientSecret, Audience: c.audienceForLabel, GrantType: "client_credentials"}, &result, false, false)
+	apiError := c.call(http.MethodPost, fmt.Sprintf("%s/oauth/token", c.authenticateHostForLabel), &Authenticate{ClientId: c.clientIdForLabel, ClientSecret: c.clientSecretForLabel, Audience: c.audienceForLabel, GrantType: "client_credentials"}, &result, false, false)
 	if apiError != nil {
 		return apiError
 	}
@@ -230,7 +232,7 @@ func (c *client) call(method, url string, body, result interface{}, needAuthenti
 	return nil
 }
 
-func NewClient(host, authenticateHost, authenticateHostForLabel, labelHost, audience, audienceForLabel, clientId, clientSecret string) Client {
+func NewClient(host, authenticateHost, authenticateHostForLabel, labelHost, audience, audienceForLabel, clientId, clientSecret, clientIdForLabel, clientSecretForLabel string) Client {
 	return &client{
 		host:                     host,
 		authenticateHost:         authenticateHost,
@@ -238,6 +240,8 @@ func NewClient(host, authenticateHost, authenticateHostForLabel, labelHost, audi
 		labelHost:                labelHost,
 		clientId:                 clientId,
 		clientSecret:             clientSecret,
+		clientIdForLabel:         clientIdForLabel,
+		clientSecretForLabel:     clientSecretForLabel,
 		audience:                 audience,
 		audienceForLabel:         audienceForLabel,
 	}

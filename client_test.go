@@ -80,7 +80,7 @@ func TestClient_CreateOrder(t *testing.T) {
 		UndeliverableInstructions: "",
 	}
 
-	c := NewClient("https://api.staging.paack.app", "https://paack-hq-staging.eu.auth0.com", "https://paack-hq-staging.eu.auth0.com", "https://api.oms.staging.paack.app", "https://ggl-stg-gcp-gw", "https://api.oms.staging.paack.app", "", "")
+	c := NewClient("https://api.staging.paack.app", "https://paack-hq-staging.eu.auth0.com", "https://paack-hq-staging.eu.auth0.com", "https://api.oms.staging.paack.app", "https://ggl-stg-gcp-gw", "https://api.oms.staging.paack.app", "", "", "", "", true)
 	r, err := c.CreateOrder(order)
 
 	if err != nil {

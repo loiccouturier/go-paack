@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"io/ioutil"
+	"log"
 	"net/http"
 )
 
@@ -35,9 +36,14 @@ type client struct {
 	clientSecretForLabel     string
 	audienceForLabel         string
 	labelHost                string
+	debug                    bool
 }
 
 func (c *client) CreateOrder(order Order) (*OrderResponse, *ApiError) {
+	if c.debug {
+		log.Println("paack.client", "CreateOrder")
+	}
+
 	var result OrderResponse
 
 	apiError := c.call(http.MethodPost, fmt.Sprintf("%s/public/v3/orders", c.host), order, &result, true, false)
@@ -49,6 +55,10 @@ func (c *client) CreateOrder(order Order) (*OrderResponse, *ApiError) {
 }
 
 func (c *client) RetrieveOrder(orderId string) (*OrderResponse, *ApiError) {
+	if c.debug {
+		log.Println("paack.client", "RetrieveOrder")
+	}
+
 	var result OrderResponse
 
 	apiError := c.call(http.MethodGet, fmt.Sprintf("%s/public/v3/orders/%s", c.host, orderId), &struct{}{}, &result, true, false)
@@ -60,6 +70,10 @@ func (c *client) RetrieveOrder(orderId string) (*OrderResponse, *ApiError) {
 }
 
 func (c *client) UpdateOrder(orderId string, order Order) (*UpdateResponse, *ApiError) {
+	if c.debug {
+		log.Println("paack.client", "UpdateOrder")
+	}
+
 	var result UpdateResponse
 
 	apiError := c.call(http.MethodPut, fmt.Sprintf("%s/public/v3/orders/%s", c.host, orderId), order, &result, true, false)
@@ -71,6 +85,10 @@ func (c *client) UpdateOrder(orderId string, order Order) (*UpdateResponse, *Api
 }
 
 func (c *client) ReplaceOrderParcels(orderId string, parcels []Parcel) (*ReplaceParcelsResponse, *ApiError) {
+	if c.debug {
+		log.Println("paack.client", "ReplaceOrderParcels")
+	}
+
 	var result ReplaceParcelsResponse
 
 	apiError := c.call(http.MethodPut, fmt.Sprintf("%s/public/v3/orders/%s/parcels", c.host, orderId), Parcels{Parcels: parcels}, &result, true, false)
@@ -82,6 +100,10 @@ func (c *client) ReplaceOrderParcels(orderId string, parcels []Parcel) (*Replace
 }
 
 func (c *client) CancelOrder(orderId string) (*CancelResponse, *ApiError) {
+	if c.debug {
+		log.Println("paack.client", "CancelOrder")
+	}
+
 	var result CancelResponse
 
 	apiError := c.call(http.MethodDelete, fmt.Sprintf("%s/public/v3/orders/%s", c.host, orderId), &struct{}{}, &result, true, false)
@@ -93,6 +115,10 @@ func (c *client) CancelOrder(orderId string) (*CancelResponse, *ApiError) {
 }
 
 func (c *client) CreateLabel(label Label) ([]byte, *ApiError) {
+	if c.debug {
+		log.Println("paack.client", "CreateLabel")
+	}
+
 	var result LabelResponse
 
 	apiError := c.call(http.MethodPost, fmt.Sprintf("%s/v3/labels", c.labelHost), label, &result, true, true)
@@ -104,6 +130,10 @@ func (c *client) CreateLabel(label Label) ([]byte, *ApiError) {
 }
 
 func (c *client) authenticate() *ApiError {
+	if c.debug {
+		log.Println("paack.client", "authenticate")
+	}
+
 	var result AuthenticateResponse
 
 	apiError := c.call(http.MethodPost, fmt.Sprintf("%s/oauth/token", c.authenticateHost), &Authenticate{ClientId: c.clientId, ClientSecret: c.clientSecret, Audience: c.audience, GrantType: "client_credentials"}, &result, false, false)
@@ -117,6 +147,10 @@ func (c *client) authenticate() *ApiError {
 }
 
 func (c *client) authenticateForLabel() *ApiError {
+	if c.debug {
+		log.Println("paack.client", "authenticateForLabel")
+	}
+
 	var result AuthenticateResponse
 
 	apiError := c.call(http.MethodPost, fmt.Sprintf("%s/oauth/token", c.authenticateHostForLabel), &Authenticate{ClientId: c.clientIdForLabel, ClientSecret: c.clientSecretForLabel, Audience: c.audienceForLabel, GrantType: "client_credentials"}, &result, false, false)
@@ -139,6 +173,9 @@ func (c *client) call(method, url string, body, result interface{}, needAuthenti
 	if err != nil {
 		return &ApiError{Err: err}
 	}
+	if c.debug {
+		log.Println("paack.client", "payload: ", string(jsonBody))
+	}
 
 	httpClient := http.DefaultClient
 	req, err := http.NewRequest(method, url, bytes.NewReader(jsonBody))
@@ -150,7 +187,14 @@ func (c *client) call(method, url string, body, result interface{}, needAuthenti
 	req.Header.Set("Content-type", "application/json")
 
 	if needAuthentication {
+		if c.debug {
+			log.Println("paack.client", "call need authentication")
+		}
+
 		if !isLabel && c.token == "" {
+			if c.debug {
+				log.Println("paack.client", "start authentication")
+			}
 			apiError := c.authenticate()
 			if apiError != nil {
 				return apiError
@@ -158,6 +202,9 @@ func (c *client) call(method, url string, body, result interface{}, needAuthenti
 		}
 
 		if isLabel && c.tokenForLabel == "" {
+			if c.debug {
+				log.Println("paack.client", "start authentication for label")
+			}
 			apiError := c.authenticateForLabel()
 			if apiError != nil {
 				return apiError
@@ -165,10 +212,16 @@ func (c *client) call(method, url string, body, result interface{}, needAuthenti
 		}
 
 		if !isLabel && c.token != "" {
+			if c.debug {
+				log.Println("paack.client", "set token")
+			}
 			req.Header.Set("Authorization", c.token)
 		}
 
 		if isLabel && c.tokenForLabel != "" {
+			if c.debug {
+				log.Println("paack.client", "set token for label")
+			}
 			req.Header.Set("Authorization", c.tokenForLabel)
 		}
 	}
@@ -180,6 +233,9 @@ func (c *client) call(method, url string, body, result interface{}, needAuthenti
 	}
 
 	if response.StatusCode == http.StatusUnauthorized {
+		if c.debug {
+			log.Println("paack.client", "Http status 401 received for url ", url)
+		}
 		// Clear token and retry call
 		c.token = ""
 		c.tokenForLabel = ""
@@ -199,26 +255,47 @@ func (c *client) call(method, url string, body, result interface{}, needAuthenti
 
 		err = nil
 		if response.StatusCode == http.StatusBadRequest {
+			if c.debug {
+				log.Println("paack.client", "Http status 400 received for url ", url, "response", string(responseBody))
+			}
 			err = ErrBadRequest
 		} else if response.StatusCode == http.StatusForbidden {
+			if c.debug {
+				log.Println("paack.client", "Http status 403 received for url ", url)
+			}
 			err = ErrForbidden
 		} else if response.StatusCode == http.StatusNotFound {
+			if c.debug {
+				log.Println("paack.client", "Http status 404 received for url ", url)
+			}
 			err = ErrNotFound
 		}
 
 		if err == nil {
+			if c.debug {
+				log.Println("paack.client", "No error for url ", url)
+			}
 			if result != nil {
 				if !isLabel {
+					if c.debug {
+						log.Println("paack.client", "Request is not for a label, unmarshal the result")
+					}
 					err = json.Unmarshal(responseBody, result)
 					if err != nil {
 						return &ApiError{Err: err}
 					}
 				} else {
+					if c.debug {
+						log.Println("paack.client", "Request is for a label, return content")
+					}
 					r := result.(*LabelResponse)
 					r.Content = responseBody
 				}
 			}
 		} else {
+			if c.debug {
+				log.Println("paack.client", "error received for url ", url)
+			}
 			var apiError ApiError
 			err2 := json.Unmarshal(responseBody, &apiError)
 			if err2 != nil {
@@ -232,7 +309,7 @@ func (c *client) call(method, url string, body, result interface{}, needAuthenti
 	return nil
 }
 
-func NewClient(host, authenticateHost, authenticateHostForLabel, labelHost, audience, audienceForLabel, clientId, clientSecret, clientIdForLabel, clientSecretForLabel string) Client {
+func NewClient(host, authenticateHost, authenticateHostForLabel, labelHost, audience, audienceForLabel, clientId, clientSecret, clientIdForLabel, clientSecretForLabel string, debug bool) Client {
 	return &client{
 		host:                     host,
 		authenticateHost:         authenticateHost,
@@ -244,5 +321,6 @@ func NewClient(host, authenticateHost, authenticateHostForLabel, labelHost, audi
 		clientSecretForLabel:     clientSecretForLabel,
 		audience:                 audience,
 		audienceForLabel:         audienceForLabel,
+		debug:                    debug,
 	}
 }

@@ -57,6 +57,8 @@ func TestClient_CreateOrder(t *testing.T) {
 
 	today := time.Now()
 
+	expectedPickup := NewScheduleSlot(time.Date(today.Year(), today.Month(), today.Day()+1, 17, 0, 0, today.Nanosecond(), today.Location()), time.Date(today.Year(), today.Month(), today.Day()+1, 19, 0, 0, today.Nanosecond(), today.Location()))
+
 	order := Order{
 		Currency:             "EUR",
 		Amount:               40.50,
@@ -64,8 +66,8 @@ func TestClient_CreateOrder(t *testing.T) {
 		DeliveryAddress:      customerAddress,
 		DeliveryInstructions: "",
 		DeliveryType:         "direct",
-		ExpectedPickUp:       NewScheduleSlot(time.Date(today.Year(), today.Month(), today.Day() + 1, 17, 0, 0, today.Nanosecond(), today.Location()), time.Date(today.Year(), today.Month(), today.Day() + 1, 19, 0, 0, today.Nanosecond(), today.Location())),
-		ExpectedDelivery:     NewScheduleSlot(time.Date(today.Year(), today.Month(), today.Day() + 1, 18, 0, 0, today.Nanosecond(), today.Location()), time.Date(today.Year(), today.Month(), today.Day() + 1, 20, 0, 0, today.Nanosecond(), today.Location())),
+		ExpectedPickUp:       &expectedPickup,
+		ExpectedDelivery:     NewScheduleSlot(time.Date(today.Year(), today.Month(), today.Day()+1, 18, 0, 0, today.Nanosecond(), today.Location()), time.Date(today.Year(), today.Month(), today.Day()+1, 20, 0, 0, today.Nanosecond(), today.Location())),
 		ExternalId:           orderExternalId,
 		InsuredCurrency:      "EUR",
 		InsuredAmount:        40.50,

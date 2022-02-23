@@ -10,12 +10,12 @@ type Order struct {
 	DeliveryInstructions      string       `json:"delivery_instructions,omitempty"`
 	DeliveryType              string       `json:"delivery_type"`
 	ExpectedDelivery          ScheduleSlot `json:"expected_delivery_ts"`
-	ExpectedPickUp            ScheduleSlot `json:"expected_pick_up_ts"`
+	ExpectedPickUp            ScheduleSlot `json:"expected_pick_up_ts,omitempty"`
 	ExternalId                string       `json:"external_id"`
 	InsuredCurrency           string       `json:"insured_currency,omitempty"`
 	InsuredAmount             float32      `json:"insured_value,omitempty"`
 	Parcels                   []Parcel     `json:"parcels"`
-	PickUpAddress             Address      `json:"pick_up_address"`
+	PickUpAddress             Address      `json:"pick_up_address,omitempty"`
 	PickUpInstructions        string       `json:"pick_up_instructions,omitempty"`
 	ServiceType               string       `json:"service_type"`
 	UndeliverableAddress      *Address     `json:"undeliverable_address,omitempty"`

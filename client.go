@@ -13,6 +13,7 @@ import (
 var ErrBadRequest = errors.New("ErrBadRequest")
 var ErrForbidden = errors.New("ErrForbidden")
 var ErrNotFound = errors.New("ErrNotFound")
+var ErrUndefined = errors.New("ErrUndefined")
 
 type Client interface {
 	CreateOrder(order Order) (*OrderResponse, *ApiError)
@@ -269,11 +270,16 @@ func (c *client) call(method, url string, body, result interface{}, needAuthenti
 				log.Println("paack.client", "Http status 404 received for url ", url)
 			}
 			err = ErrNotFound
+		} else if response.StatusCode != http.StatusOK && response.StatusCode != http.StatusCreated && response.StatusCode != http.StatusNoContent {
+			if c.debug {
+				log.Println("paack.client", fmt.Sprintf("Http status %d received for url %s", response.StatusCode, url))
+			}
+			err = ErrUndefined
 		}
 
 		if err == nil {
 			if c.debug {
-				log.Println("paack.client", "No error for url ", url)
+				log.Println("paack.client", "Success for url ", url)
 			}
 			if result != nil {
 				if !isLabel {

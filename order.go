@@ -20,7 +20,6 @@ type Order struct {
 	ServiceType               string        `json:"service_type"`
 	UndeliverableAddress      *Address      `json:"undeliverable_address,omitempty"`
 	UndeliverableInstructions string        `json:"undeliverable_instructions,omitempty"`
-	SaleNumber                string        `json:"sale_number,omitempty"`
 	OrderDetails              []Field       `json:"order_details,omitempty"`
 }
 
